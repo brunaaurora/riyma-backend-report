@@ -1,4 +1,3 @@
-import { put } from '@vercel/blob';
 import { generateRiymaPDF } from '../lib/pdf-generator.js';
 import { validateRiymaData } from '../lib/validation.js';
 import { processImages } from '../lib/image-processor.js';
@@ -27,7 +26,7 @@ export default async function handler(req, res) {
     // Validate form data
     const validatedData = validateRiymaData(fields);
     
-    // Process and upload images
+    // Process and upload images to Cloudinary
     const imageUrls = await processImages(files);
     
     // Generate PDF with all data
@@ -37,20 +36,16 @@ export default async function handler(req, res) {
       generatedAt: new Date().toISOString()
     });
     
-    // Upload PDF to blob storage
+    // Convert PDF buffer to base64 for response
+    const pdfBase64 = pdfBuffer.toString('base64');
     const timestamp = Date.now();
     const clientName = validatedData.clientName.replace(/[^a-zA-Z0-9]/g, '-');
     const fileName = `riyma-analysis-${clientName}-${timestamp}.pdf`;
     
-    const pdfBlob = await put(fileName, pdfBuffer, {
-      access: 'public',
-      contentType: 'application/pdf'
-    });
-    
-    // Return success response
+    // Return success response with PDF data
     res.status(200).json({ 
       success: true, 
-      pdfUrl: pdfBlob.url,
+      pdfData: pdfBase64,
       fileName: fileName,
       message: 'Riyma analysis report generated successfully'
     });
