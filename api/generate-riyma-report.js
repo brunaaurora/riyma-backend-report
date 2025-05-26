@@ -1,3 +1,5 @@
+import { generateRiymaPDF } from '../lib/pdf-generator.js';
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,17 +16,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Simple test response
+    // For now, use simple test data
+    const testData = {
+      clientName: 'Test Client',
+      analysisDate: new Date().toISOString().split('T')[0],
+      aestheticianName: 'Test Aesthetician',
+      generatedAt: new Date().toISOString(),
+      strengths: 'Beautiful natural features and great bone structure.',
+      nonSurgicalOptions: 'Focus on skincare routine and highlighting your best features.',
+      surgicalOptions: 'No surgical interventions recommended at this time.',
+      lifestyleRecommendations: 'Maintain good hydration and regular sleep schedule.'
+    };
+
+    // Generate PDF
+    const pdfBuffer = await generateRiymaPDF(testData);
+    
+    // Convert PDF buffer to base64
+    const pdfBase64 = pdfBuffer.toString('base64');
+    const fileName = `riyma-analysis-test-${Date.now()}.pdf`;
+    
+    // Return success response with PDF data
     res.status(200).json({ 
       success: true, 
-      message: 'API is working!',
-      timestamp: new Date().toISOString()
+      pdfData: pdfBase64,
+      fileName: fileName,
+      message: 'Riyma analysis report generated successfully'
     });
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Report generation error:', error);
     res.status(500).json({ 
-      error: 'Server error',
+      error: 'Failed to generate report',
       details: error.message
     });
   }
