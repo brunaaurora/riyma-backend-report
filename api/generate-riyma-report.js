@@ -1,3 +1,5 @@
+import { generateRiymaPDF } from '../lib/pdf-generator.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -13,30 +15,36 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Simple HTML report instead of PDF for now
-    const htmlReport = `
-      <html>
-        <head><title>Riyma Analysis Report</title></head>
-        <body style="font-family: Arial; padding: 40px;">
-          <h1 style="color: #1e293b;">riyma</h1>
-          <h2>Facial Analysis Report</h2>
-          <p><strong>Client:</strong> Test Client</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-          <p><strong>Aesthetician:</strong> Test Aesthetician</p>
-          <p>Report generated successfully!</p>
-        </body>
-      </html>
-    `;
+    console.log('Starting PDF generation...');
+    
+    // Simple test data
+    const testData = {
+      clientName: 'Test Client',
+      analysisDate: new Date().toISOString().split('T')[0],
+      aestheticianName: 'Test Aesthetician',
+      generatedAt: new Date().toISOString(),
+      strengths: 'Beautiful natural features and excellent bone structure that create harmonious facial proportions.',
+      nonSurgicalOptions: 'Focus on a consistent skincare routine with quality products. Consider professional facial treatments quarterly.'
+    };
+
+    // Generate PDF
+    const pdfBuffer = await generateRiymaPDF(testData);
+    
+    // Convert to base64
+    const pdfBase64 = pdfBuffer.toString('base64');
+    const fileName = `riyma-analysis-${Date.now()}.pdf`;
     
     res.status(200).json({ 
       success: true, 
-      message: 'Report generated (HTML version)',
-      htmlReport: htmlReport
+      pdfData: pdfBase64,
+      fileName: fileName,
+      message: 'Riyma PDF analysis report generated successfully'
     });
     
   } catch (error) {
+    console.error('PDF Error:', error);
     res.status(500).json({ 
-      error: 'Failed to generate report',
+      error: 'PDF generation failed',
       details: error.message
     });
   }
