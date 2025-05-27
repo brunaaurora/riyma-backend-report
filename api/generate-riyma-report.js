@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// FIXED - Handles FormData from Framer form
+// FIXED - Handles FormData from Framer form and removes test content
 
 const { generateRiymaReportTemplate } = require('../templates/riyma-report-template.js');
 
@@ -38,6 +38,9 @@ module.exports = async function handler(req, res) {
 
     console.log('📋 Form fields received:', Object.keys(formFields));
 
+    // Generate proper report ID (NO TEST CONTENT)
+    const reportId = `RYM-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Date.now().toString().slice(-6)}`;
+
     // Map your form fields to template fields
     const mappedData = {
       // Patient/Client Info (your form → template mapping)
@@ -74,13 +77,14 @@ module.exports = async function handler(req, res) {
       // Summary
       summary: buildSummary(formFields),
       
-      // Report metadata
-      reportId: generateReportId(),
+      // Report metadata - NO TEST CONTENT
+      reportId: reportId,
       reviewedBy: formFields.aestheticianName || 'Professional Aesthetician',
       generatedAt: new Date().toISOString()
     };
 
     console.log('✅ Data mapped successfully');
+    console.log('📄 Report ID:', reportId);
 
     // Generate HTML template
     const htmlTemplate = generateRiymaReportTemplate(mappedData, []);
@@ -100,7 +104,7 @@ module.exports = async function handler(req, res) {
         generatedAt: new Date().toISOString()
       },
       htmlPreview: htmlTemplate,
-      reportId: mappedData.reportId
+      reportId: reportId
     };
 
     console.log('📤 Sending successful response');
@@ -117,15 +121,6 @@ module.exports = async function handler(req, res) {
 };
 
 // Helper functions
-function generateReportId() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const timestamp = Date.now().toString().slice(-6);
-  return `RYM-${year}${month}${day}-${timestamp}`;
-}
-
 function getRatingText(score) {
   const num = parseFloat(score);
   if (num >= 4.5) return 'Excellent';
