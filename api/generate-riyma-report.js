@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// FIXED - Properly handles Vercel FormData parsing
+// REAL FIX - Proper Vercel FormData parsing
 
 const { generateRiymaReportTemplate } = require('../templates/riyma-report-template.js');
 
