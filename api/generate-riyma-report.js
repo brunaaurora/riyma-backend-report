@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// FIXED VERSION - Proper Vercel FormData parsing
+// DEFINITIVE FIX - Exact field names from React form
 
 const { generateRiymaReportTemplate } = require('../templates/riyma-report-template.js');
 
@@ -17,19 +17,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('📄 === VERCEL FORMDATA PARSING ===');
+    console.log('🚀 === RIYMA FORM PROCESSING START ===');
     
-    // VERCEL FORMDATA FIX - Parse multipart/form-data properly
+    // VERCEL FORMDATA PARSING - Handle multiple formats
     let formFields = {};
     
-    // Check if req.body exists and handle different formats
     if (req.body) {
-      console.log('📋 Raw body type:', typeof req.body);
-      console.log('📋 Raw body keys:', Object.keys(req.body));
+      console.log('📋 Request body type:', typeof req.body);
+      console.log('📋 Request body keys:', Object.keys(req.body));
       
-      // Vercel sometimes puts FormData fields directly in req.body
       if (typeof req.body === 'object') {
-        // Handle both nested and flat structures
+        // Vercel might nest FormData or flatten it
         if (req.body.formData) {
           formFields = req.body.formData;
           console.log('📦 Using nested formData structure');
@@ -40,12 +38,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    console.log('📝 Parsed form fields:');
+    console.log('📝 === RECEIVED FORM DATA ===');
+    console.log('📝 Total fields received:', Object.keys(formFields).length);
     Object.keys(formFields).forEach(key => {
       console.log(`   ${key}: "${formFields[key]}"`);
     });
 
-    // Generate report ID
+    // Generate unique report ID
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -53,35 +52,56 @@ module.exports = async function handler(req, res) {
     const timestamp = Date.now().toString().slice(-6);
     const reportId = `RYM-${year}${month}${day}-${timestamp}`;
 
-    // FIXED DATA MAPPING - Handle string values properly
+    // EXACT FIELD MAPPING - Using React form field names
     const mappedData = {
-      // Patient Info - Direct mapping
-      patientName: formFields.clientName || formFields.fullName || formFields.patientName || 'Name Not Provided',
-      age: formFields.clientAge || formFields.age || formFields.patientAge || 'Age Not Provided',
-      gender: formFields.gender || 'Not Specified',
-      assessmentDate: formFields.analysisDate || formFields.assessmentDate || today.toISOString().split('T')[0],
-      doctorName: formFields.aestheticianName || formFields.doctorName || formFields.referringPhysician || 'Aesthetician Not Provided',
+      // Patient Information (exact field names from form)
+      patientName: formFields.clientName || 'Name Not Provided',
+      age: formFields.clientAge || 'Age Not Provided',
+      gender: 'Not Specified', // Form doesn't have gender field
+      assessmentDate: formFields.analysisDate || today.toISOString().split('T')[0],
+      doctorName: formFields.aestheticianName || 'Aesthetician Not Provided',
+      clientId: formFields.clientId || '',
+      certification: formFields.certification || '',
       
-      // Assessment Data - Handle numeric strings
+      // Assessment Scores (convert ratings to scores)
       facialSymmetry: {
-        rating: getRatingText(formFields.facialSymmetry || formFields.facialSymmetryScore) || 'Good',
-        score: parseFloat(formFields.facialSymmetry || formFields.facialSymmetryScore) || 8.0,
-        notes: formFields.facialSymmetryNotes || formFields.proportionNotes || 'Facial symmetry assessment completed.'
+        rating: getRatingText(formFields.facialSymmetry) || 'Good',
+        score: parseFloat(formFields.facialSymmetry) || 8.0,
+        notes: formFields.proportionNotes || 'Facial symmetry assessment completed.'
       },
       
       skinQuality: {
-        rating: capitalizeFirst(formFields.skinQuality || formFields.skinQualityRating) || 'Good',
-        score: getQualityScore(formFields.skinQuality || formFields.skinQualityScore) || 7.5,
-        notes: formFields.skinQualityNotes || formFields.skinAnalysis || 'Skin quality assessment completed.'
+        rating: capitalizeFirst(formFields.skinQuality) || 'Good',
+        score: getQualityScore(formFields.skinQuality) || 7.5,
+        notes: formFields.skinAnalysis || 'Skin quality assessment completed.'
       },
       
       facialProportions: {
-        rating: getRatingText(formFields.ruleOfThirds || formFields.facialProportions || formFields.facialProportionsScore) || 'Good', 
-        score: parseFloat(formFields.ruleOfThirds || formFields.facialProportions || formFields.facialProportionsScore) || 8.0,
-        notes: formFields.facialProportionsNotes || formFields.featureAnalysis || 'Facial proportions assessed.'
+        rating: getRatingText(formFields.ruleOfThirds) || 'Good', 
+        score: parseFloat(formFields.ruleOfThirds) || 8.0,
+        notes: formFields.featureAnalysis || 'Facial proportions assessed.'
       },
 
-      // Recommendations - Build from form fields
+      // Individual feature ratings
+      eyesRating: parseFloat(formFields.eyesRating) || 0,
+      noseRating: parseFloat(formFields.noseRating) || 0,
+      lipsRating: parseFloat(formFields.lipsRating) || 0,
+      jawlineRating: parseFloat(formFields.jawlineRating) || 0,
+      
+      // Skin assessment
+      softTissue: formFields.softTissue || '',
+      
+      // Overall assessment
+      aestheticType: formFields.aestheticType || '',
+      overallHarmony: formFields.overallHarmony || '',
+
+      // Recommendations (exact field names)
+      strengths: formFields.strengths || '',
+      nonSurgicalOptions: formFields.nonSurgicalOptions || '',
+      surgicalOptions: formFields.surgicalOptions || '',
+      lifestyleRecommendations: formFields.lifestyleRecommendations || '',
+      
+      // Build recommendations array
       recommendations: buildRecommendations(formFields),
       
       // Summary
@@ -89,93 +109,126 @@ module.exports = async function handler(req, res) {
       
       // Report metadata
       reportId: reportId,
-      reviewedBy: formFields.aestheticianName || formFields.doctorName || formFields.referringPhysician || 'Professional Aesthetician',
+      reviewedBy: formFields.aestheticianName || 'Professional Aesthetician',
       generatedAt: today.toISOString()
     };
 
-    console.log('✅ MAPPED DATA CHECK:');
-    console.log('   Patient Name:', mappedData.patientName);
-    console.log('   Age:', mappedData.age);
-    console.log('   Assessment Date:', mappedData.assessmentDate);
-    console.log('   Doctor Name:', mappedData.doctorName);
-    console.log('   Report ID:', mappedData.reportId);
+    console.log('✅ === MAPPED DATA VERIFICATION ===');
+    console.log('   Patient Name:', `"${mappedData.patientName}"`);
+    console.log('   Age:', `"${mappedData.age}"`);
+    console.log('   Assessment Date:', `"${mappedData.assessmentDate}"`);
+    console.log('   Doctor Name:', `"${mappedData.doctorName}"`);
+    console.log('   Report ID:', `"${mappedData.reportId}"`);
     console.log('   Facial Symmetry Score:', mappedData.facialSymmetry.score);
-    console.log('   Skin Quality Score:', mappedData.skinQuality.score);
+    console.log('   Skin Quality:', `"${mappedData.skinQuality.rating}"`);
+    console.log('   Strengths:', mappedData.strengths ? 'PROVIDED' : 'EMPTY');
 
     // Generate HTML template
+    console.log('📄 Generating HTML template...');
     const htmlTemplate = generateRiymaReportTemplate(mappedData, []);
     
-    // VERIFY DATA IN TEMPLATE
-    const hasClientName = htmlTemplate.includes(mappedData.patientName) && !htmlTemplate.includes('Name Not Provided');
-    const hasDoctor = htmlTemplate.includes(mappedData.doctorName) && !htmlTemplate.includes('Aesthetician Not Provided');
-    const hasReportId = htmlTemplate.includes(mappedData.reportId);
-    const hasAge = htmlTemplate.includes(mappedData.age) && !htmlTemplate.includes('Age Not Provided');
+    // CRITICAL VERIFICATION - Check if actual data made it to template
+    const dataChecks = {
+      hasClientName: htmlTemplate.includes(mappedData.patientName) && !htmlTemplate.includes('Name Not Provided'),
+      hasDoctor: htmlTemplate.includes(mappedData.doctorName) && !htmlTemplate.includes('Aesthetician Not Provided'),
+      hasAge: htmlTemplate.includes(mappedData.age) && !htmlTemplate.includes('Age Not Provided'),
+      hasReportId: htmlTemplate.includes(mappedData.reportId),
+      hasAssessmentDate: htmlTemplate.includes(mappedData.assessmentDate)
+    };
     
-    console.log('🔍 TEMPLATE VERIFICATION:');
-    console.log('   Contains patient name:', hasClientName);
-    console.log('   Contains doctor name:', hasDoctor);  
-    console.log('   Contains report ID:', hasReportId);
-    console.log('   Contains age:', hasAge);
+    console.log('🔍 === TEMPLATE DATA VERIFICATION ===');
+    console.log('   Client name in template:', dataChecks.hasClientName);
+    console.log('   Doctor name in template:', dataChecks.hasDoctor);  
+    console.log('   Age in template:', dataChecks.hasAge);
+    console.log('   Report ID in template:', dataChecks.hasReportId);
+    console.log('   Assessment date in template:', dataChecks.hasAssessmentDate);
     
-    // Build response
+    // If data is not in template, there's an issue with the template function
+    if (!dataChecks.hasClientName || !dataChecks.hasDoctor) {
+      console.log('⚠️  WARNING: Template is not using the provided data correctly!');
+      console.log('⚠️  This indicates an issue with the generateRiymaReportTemplate function');
+    }
+    
+    // Build comprehensive response
     const responseData = {
       success: true,
       reportData: {
+        // Patient info
         clientName: mappedData.patientName,
         age: mappedData.age,
-        gender: mappedData.gender,
         analysisDate: mappedData.assessmentDate,
         aestheticianName: mappedData.doctorName,
-        certification: formFields.certification || '',
+        clientId: mappedData.clientId,
+        certification: mappedData.certification,
         
-        // Assessment scores
+        // Assessment data
         facialSymmetryScore: mappedData.facialSymmetry.score,
-        skinQualityScore: mappedData.skinQuality.score,
-        facialProportionsScore: mappedData.facialProportions.score,
-        
-        // Assessment notes
+        facialSymmetryRating: mappedData.facialSymmetry.rating,
         facialSymmetryNotes: mappedData.facialSymmetry.notes,
+        
+        skinQualityScore: mappedData.skinQuality.score,
+        skinQualityRating: mappedData.skinQuality.rating, 
         skinQualityNotes: mappedData.skinQuality.notes,
+        
+        facialProportionsScore: mappedData.facialProportions.score,
+        facialProportionsRating: mappedData.facialProportions.rating,
         facialProportionsNotes: mappedData.facialProportions.notes,
         
+        // Individual features
+        eyesRating: mappedData.eyesRating,
+        noseRating: mappedData.noseRating,
+        lipsRating: mappedData.lipsRating,
+        jawlineRating: mappedData.jawlineRating,
+        
+        // Overall assessment
+        aestheticType: mappedData.aestheticType,
+        overallHarmony: mappedData.overallHarmony,
+        softTissue: mappedData.softTissue,
+        
         // Recommendations
-        strengths: formFields.strengths || formFields.keyStrengths || 'Natural facial harmony observed.',
-        nonSurgicalOptions: formFields.nonSurgicalOptions || formFields.nonSurgicalRecommendations || 'Skincare optimization recommended.',
-        surgicalOptions: formFields.surgicalOptions || formFields.surgicalRecommendations || 'Consultation available if desired.',
-        lifestyleRecommendations: formFields.lifestyleRecommendations || formFields.lifestyle || 'Maintain healthy lifestyle habits.',
+        strengths: mappedData.strengths,
+        nonSurgicalOptions: mappedData.nonSurgicalOptions,
+        surgicalOptions: mappedData.surgicalOptions,
+        lifestyleRecommendations: mappedData.lifestyleRecommendations,
         
         // Summary
         clinicalSummary: mappedData.summary,
-        overallAssessment: formFields.overallAssessment || 'Professional facial analysis completed with personalized recommendations.',
         
-        generatedAt: today.toISOString()
+        generatedAt: mappedData.generatedAt
       },
       htmlPreview: htmlTemplate,
       reportId: reportId,
       debug: {
+        receivedFieldCount: Object.keys(formFields).length,
         receivedFields: Object.keys(formFields),
-        receivedData: formFields,
-        mappedData: mappedData,
-        templateChecks: {
-          hasClientName,
-          hasDoctor,
-          hasReportId,
-          hasAge
-        }
+        sampleData: {
+          clientName: formFields.clientName,
+          aestheticianName: formFields.aestheticianName,
+          analysisDate: formFields.analysisDate,
+          facialSymmetry: formFields.facialSymmetry,
+          skinQuality: formFields.skinQuality
+        },
+        mappedData: {
+          patientName: mappedData.patientName,
+          doctorName: mappedData.doctorName,
+          assessmentDate: mappedData.assessmentDate
+        },
+        templateChecks: dataChecks
       }
     };
 
-    console.log('📤 Sending response with debug info');
-    console.log('🎯 Response includes actual data:', {
+    console.log('📤 === SENDING RESPONSE ===');
+    console.log('✅ Response includes:', {
       clientName: responseData.reportData.clientName,
       aestheticianName: responseData.reportData.aestheticianName,
-      reportId: responseData.reportId
+      reportId: responseData.reportId,
+      templateValid: dataChecks.hasClientName && dataChecks.hasDoctor
     });
     
     return res.status(200).json(responseData);
 
   } catch (error) {
-    console.error('❌ Error processing form:', error);
+    console.error('❌ === ERROR PROCESSING FORM ===', error);
     return res.status(500).json({ 
       success: false,
       error: 'Internal server error', 
@@ -185,16 +238,20 @@ module.exports = async function handler(req, res) {
   }
 };
 
-// Helper functions
+// Helper functions for rating conversion
 function getRatingText(score) {
   const num = parseFloat(score);
   if (isNaN(num)) return 'Good';
-  if (num >= 9) return 'Excellent';
-  if (num >= 8) return 'Very Good';
-  if (num >= 7) return 'Good';  
-  if (num >= 6) return 'Fair';
-  if (num >= 5) return 'Needs Improvement';
-  return 'Poor';
+  
+  // Convert 1-5 scale to text
+  switch(num) {
+    case 5: return 'Excellent';
+    case 4: return 'Very Good'; 
+    case 3: return 'Good';
+    case 2: return 'Fair';
+    case 1: return 'Needs Improvement';
+    default: return 'Good';
+  }
 }
 
 function getQualityScore(quality) {
@@ -203,12 +260,9 @@ function getQualityScore(quality) {
   const qualityStr = String(quality).toLowerCase();
   const qualityMap = {
     'excellent': 9.5,
-    'very good': 8.5,
     'good': 8.0,
     'average': 6.5,
-    'fair': 5.5,
     'needs-improvement': 5.0,
-    'needs improvement': 5.0,
     'poor': 3.0
   };
   
@@ -217,65 +271,40 @@ function getQualityScore(quality) {
 
 function capitalizeFirst(str) {
   if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1).replace('-', ' ');
 }
 
 function buildRecommendations(formFields) {
   const recommendations = [];
   
-  // Key Strengths
   if (formFields.strengths && formFields.strengths.trim()) {
     recommendations.push({
       title: 'Key Strengths & Best Features',
       description: formFields.strengths
     });
-  } else if (formFields.keyStrengths && formFields.keyStrengths.trim()) {
-    recommendations.push({
-      title: 'Key Strengths & Best Features',
-      description: formFields.keyStrengths
-    });
   }
   
-  // Non-Surgical Options
   if (formFields.nonSurgicalOptions && formFields.nonSurgicalOptions.trim()) {
     recommendations.push({
       title: 'Non-Surgical Enhancement Options',
       description: formFields.nonSurgicalOptions
     });
-  } else if (formFields.nonSurgicalRecommendations && formFields.nonSurgicalRecommendations.trim()) {
-    recommendations.push({
-      title: 'Non-Surgical Enhancement Options',
-      description: formFields.nonSurgicalRecommendations
-    });
   }
   
-  // Surgical Options
   if (formFields.surgicalOptions && formFields.surgicalOptions.trim()) {
     recommendations.push({
       title: 'Surgical Enhancement Considerations', 
       description: formFields.surgicalOptions
     });
-  } else if (formFields.surgicalRecommendations && formFields.surgicalRecommendations.trim()) {
-    recommendations.push({
-      title: 'Surgical Enhancement Considerations', 
-      description: formFields.surgicalRecommendations
-    });
   }
   
-  // Lifestyle Recommendations
   if (formFields.lifestyleRecommendations && formFields.lifestyleRecommendations.trim()) {
     recommendations.push({
       title: 'Lifestyle & Wellness Recommendations',
       description: formFields.lifestyleRecommendations
     });
-  } else if (formFields.lifestyle && formFields.lifestyle.trim()) {
-    recommendations.push({
-      title: 'Lifestyle & Wellness Recommendations',
-      description: formFields.lifestyle
-    });
   }
 
-  // Default recommendation if none provided
   if (recommendations.length === 0) {
     recommendations.push({
       title: 'Professional Assessment Complete',
@@ -297,15 +326,11 @@ function buildSummary(formFields) {
     summary += `Overall harmony score: ${formFields.overallHarmony}/5. `;
   }
   
-  if (formFields.overallScore) {
-    summary += `Overall assessment score: ${formFields.overallScore}/10. `;
+  if (formFields.skinAnalysis && formFields.skinAnalysis.trim()) {
+    summary += 'Detailed skin analysis provided. ';
   }
   
-  if (formFields.clinicalNotes && formFields.clinicalNotes.trim()) {
-    summary += formFields.clinicalNotes + ' ';
-  }
-  
-  summary += 'Detailed recommendations provided based on individual assessment.';
+  summary += 'Personalized recommendations based on individual assessment.';
   
   return summary;
 }
