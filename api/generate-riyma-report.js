@@ -1,12 +1,7 @@
 // api/generate-riyma-report.js
-// FIXED - Pure CommonJS syntax for Vercel
+// FIXED - Handles FormData from Framer form
 
 const { generateRiymaReportTemplate } = require('../templates/riyma-report-template.js');
-
-// Comment out these if they don't exist yet - we'll add them later
-// const { generatePDF } = require('../lib/pdf-generator.js');
-// const { validateFormData } = require('../lib/validation.js');
-// const { processCloudinaryImages } = require('../lib/image-processor.js');
 
 module.exports = async function handler(req, res) {
   // Set CORS headers
@@ -23,124 +18,193 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { formData, mode = 'generate', managerReview = false } = req.body;
+    console.log('📄 Processing Riyma form submission...');
 
-    console.log('📄 Generating Riyma report with data:', JSON.stringify(formData, null, 2));
+    // Handle FormData from your Framer form
+    let formFields = {};
+    let imageFiles = [];
 
-    // Basic validation
-    if (!formData || typeof formData !== 'object') {
-      return res.status(400).json({ 
-        error: 'Invalid form data', 
-        details: 'Form data is required and must be an object'
-      });
+    // Parse FormData if it exists
+    if (req.body && typeof req.body === 'object') {
+      // Handle both JSON and FormData
+      if (req.body.formData) {
+        // JSON format: {formData: {...}}
+        formFields = req.body.formData;
+      } else {
+        // FormData format: flatten the fields
+        formFields = req.body;
+      }
     }
 
-    // Process Cloudinary images if present (skip for now if function doesn't exist)
-    let processedImages = [];
-    if (formData.cloudinaryImages && formData.cloudinaryImages.length > 0) {
-      console.log('📸 Cloudinary images found:', formData.cloudinaryImages.length);
-      // TODO: Add image processing later
-      processedImages = formData.cloudinaryImages;
-    }
+    console.log('📋 Form fields received:', Object.keys(formFields));
 
-    // Generate the HTML template with form data
-    const htmlTemplate = generateRiymaReportTemplate(formData, processedImages);
-    console.log('✅ HTML template generated successfully');
+    // Map your form fields to template fields
+    const mappedData = {
+      // Patient/Client Info (your form → template mapping)
+      patientName: formFields.clientName || 'Client Name Not Provided',
+      fullName: formFields.clientName,
+      age: formFields.clientAge || 'N/A',
+      gender: 'Not Specified', // Your form doesn't have this field
+      assessmentDate: formFields.analysisDate || new Date().toISOString().split('T')[0],
+      doctorName: formFields.aestheticianName || 'Aesthetician Not Provided',
+      physician: formFields.aestheticianName,
+      
+      // Assessment Data
+      facialSymmetry: {
+        rating: getRatingText(formFields.facialSymmetry) || 'Good',
+        score: parseFloat(formFields.facialSymmetry) || 8.0,
+        notes: formFields.proportionNotes || 'Facial symmetry assessment completed.'
+      },
+      
+      skinQuality: {
+        rating: capitalizeFirst(formFields.skinQuality) || 'Good',
+        score: getQualityScore(formFields.skinQuality) || 7.5,
+        notes: formFields.skinAnalysis || 'Skin quality assessment completed.'
+      },
+      
+      facialProportions: {
+        rating: getRatingText(formFields.ruleOfThirds) || 'Good', 
+        score: parseFloat(formFields.ruleOfThirds) || 8.0,
+        notes: formFields.featureAnalysis || 'Facial proportions assessed.'
+      },
 
-    // Handle different modes
-    switch (mode) {
-      case 'preview':
-        console.log('🔍 Preview mode - returning HTML');
-        return res.status(200).json({
-          success: true,
-          htmlPreview: htmlTemplate,
-          reportId: formData.reportId || generateReportId(),
-          mode: 'preview'
-        });
+      // Recommendations
+      recommendations: buildRecommendations(formFields),
+      
+      // Summary
+      summary: buildSummary(formFields),
+      
+      // Report metadata
+      reportId: generateReportId(),
+      reviewedBy: formFields.aestheticianName || 'Professional Aesthetician',
+      generatedAt: new Date().toISOString()
+    };
 
-      case 'generate':
-        console.log('📄 Generate mode - creating PDF');
-        
-        // For now, return HTML until PDF generation is working
-        // TODO: Uncomment when pdf-generator is ready
-        /*
-        const pdfBuffer = await generatePDF(htmlTemplate, {
-          format: 'A4',
-          printBackground: true,
-          margin: {
-            top: '10mm',
-            right: '10mm',
-            bottom: '10mm',
-            left: '10mm'
-          }
-        });
-        */
+    console.log('✅ Data mapped successfully');
 
-        if (managerReview) {
-          console.log('👨‍💼 Manager review mode');
-          return res.status(200).json({
-            success: true,
-            htmlPreview: htmlTemplate,
-            reportId: formData.reportId || generateReportId(),
-            requiresApproval: true,
-            mode: 'manager_review'
-          });
-        } else {
-          // For now, return HTML instead of PDF
-          console.log('📤 Returning HTML (PDF generation disabled for testing)');
-          return res.status(200).json({
-            success: true,
-            htmlPreview: htmlTemplate,
-            reportId: formData.reportId || generateReportId(),
-            mode: 'html_output'
-          });
-          
-          // TODO: Enable when PDF generator works
-          /*
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `attachment; filename="riyma-report-${formData.reportId || Date.now()}.pdf"`);
-          return res.status(200).send(pdfBuffer);
-          */
-        }
+    // Generate HTML template
+    const htmlTemplate = generateRiymaReportTemplate(mappedData, []);
+    
+    // Build the response your form expects
+    const responseData = {
+      success: true,
+      reportData: {
+        clientName: mappedData.patientName,
+        analysisDate: mappedData.assessmentDate,
+        aestheticianName: mappedData.doctorName,
+        certification: formFields.certification || '',
+        strengths: formFields.strengths || 'Natural facial harmony observed.',
+        nonSurgicalOptions: formFields.nonSurgicalOptions || 'Skincare optimization recommended.',
+        surgicalOptions: formFields.surgicalOptions || 'Consultation available if desired.',
+        lifestyleRecommendations: formFields.lifestyleRecommendations || 'Maintain healthy lifestyle habits.',
+        generatedAt: new Date().toISOString()
+      },
+      htmlPreview: htmlTemplate,
+      reportId: mappedData.reportId
+    };
 
-      case 'approve':
-        console.log('✅ Approve mode - generating final report');
-        
-        // TODO: Add PDF generation and Google Sheets integration
-        return res.status(200).json({
-          success: true,
-          message: 'Report approved (PDF generation and Google Sheets integration pending)',
-          reportId: formData.reportId || generateReportId(),
-          mode: 'approved'
-        });
-
-      default:
-        return res.status(400).json({ error: 'Invalid mode. Use: preview, generate, or approve' });
-    }
+    console.log('📤 Sending successful response');
+    return res.status(200).json(responseData);
 
   } catch (error) {
-    console.error('❌ Error generating report:', error);
+    console.error('❌ Error processing form:', error);
     return res.status(500).json({ 
+      success: false,
       error: 'Internal server error', 
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: error.message
     });
   }
 };
 
-// Helper function to generate unique report ID
+// Helper functions
 function generateReportId() {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const timestamp = Date.now().toString().slice(-6);
-  
   return `RYM-${year}${month}${day}-${timestamp}`;
 }
 
-// Helper function placeholder for Google Sheets integration
-async function sendToGoogleSheets(formData, pdfBuffer) {
-  console.log('📊 Google Sheets integration placeholder:', formData.reportId);
-  // TODO: Add your existing Google Sheets code here
+function getRatingText(score) {
+  const num = parseFloat(score);
+  if (num >= 4.5) return 'Excellent';
+  if (num >= 3.5) return 'Very Good';
+  if (num >= 2.5) return 'Good';
+  if (num >= 1.5) return 'Fair';
+  return 'Needs Improvement';
+}
+
+function getQualityScore(quality) {
+  const qualityMap = {
+    'excellent': 9.5,
+    'good': 8.0,
+    'average': 6.5,
+    'needs-improvement': 5.0,
+    'poor': 3.0
+  };
+  return qualityMap[quality] || 7.0;
+}
+
+function capitalizeFirst(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function buildRecommendations(formFields) {
+  const recommendations = [];
+  
+  if (formFields.strengths) {
+    recommendations.push({
+      title: 'Key Strengths & Best Features',
+      description: formFields.strengths
+    });
+  }
+  
+  if (formFields.nonSurgicalOptions) {
+    recommendations.push({
+      title: 'Non-Surgical Enhancement Options',
+      description: formFields.nonSurgicalOptions
+    });
+  }
+  
+  if (formFields.surgicalOptions) {
+    recommendations.push({
+      title: 'Surgical Enhancement Considerations', 
+      description: formFields.surgicalOptions
+    });
+  }
+  
+  if (formFields.lifestyleRecommendations) {
+    recommendations.push({
+      title: 'Lifestyle & Wellness Recommendations',
+      description: formFields.lifestyleRecommendations
+    });
+  }
+
+  // Default recommendations if none provided
+  if (recommendations.length === 0) {
+    recommendations.push({
+      title: 'Professional Assessment Complete',
+      description: 'Comprehensive facial analysis has been completed with personalized recommendations.'
+    });
+  }
+  
+  return recommendations;
+}
+
+function buildSummary(formFields) {
+  let summary = 'Professional facial analysis completed. ';
+  
+  if (formFields.aestheticType) {
+    summary += `Aesthetic classification: ${formFields.aestheticType}. `;
+  }
+  
+  if (formFields.overallHarmony) {
+    summary += `Overall harmony score: ${formFields.overallHarmony}/5. `;
+  }
+  
+  summary += 'Detailed recommendations provided based on individual assessment.';
+  
+  return summary;
 }
