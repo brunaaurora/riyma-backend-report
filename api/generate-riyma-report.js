@@ -1,10 +1,9 @@
 // api/generate-riyma-report.js
-// CLEAN VERSION - No test content, full debugging
+// DEBUG VERSION - See exactly what data is received
 
 const { generateRiymaReportTemplate } = require('../templates/riyma-report-template.js');
 
 module.exports = async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,34 +17,43 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('📄 Processing Riyma form submission...');
+    console.log('📄 === FORM SUBMISSION DEBUG ===');
+    console.log('📋 Raw req.body type:', typeof req.body);
+    console.log('📋 Raw req.body keys:', Object.keys(req.body || {}));
+    console.log('📋 Raw req.body content:', JSON.stringify(req.body, null, 2));
 
-    // Handle FormData from your Framer form
+    // Handle FormData parsing
     let formFields = {};
 
+    // Check if it's FormData or JSON
     if (req.body && typeof req.body === 'object') {
+      // If it has formData property, it's JSON wrapped
       if (req.body.formData) {
         formFields = req.body.formData;
+        console.log('📦 Using req.body.formData');
       } else {
+        // Otherwise, it's direct FormData
         formFields = req.body;
+        console.log('📦 Using req.body directly');
       }
     }
 
-    console.log('📋 Form fields received:', Object.keys(formFields));
-    console.log('👤 Client name:', formFields.clientName);
-    console.log('📅 Analysis date:', formFields.analysisDate);
+    console.log('📝 Parsed form fields:');
+    Object.keys(formFields).forEach(key => {
+      console.log(`   ${key}: ${formFields[key]}`);
+    });
 
-    // Generate CLEAN report ID - NO TEST CONTENT
+    // Generate report ID
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const timestamp = Date.now().toString().slice(-6);
-    const cleanReportId = `RYM-${year}${month}${day}-${timestamp}`;
+    const reportId = `RYM-${year}${month}${day}-${timestamp}`;
 
-    console.log('🆔 Generated Report ID:', cleanReportId);
-
-    // Map form data - NO TEST CONTENT
+    // Map form data with detailed logging
+    console.log('🗺️ Mapping form data...');
+    
     const mappedData = {
       // Patient Info
       patientName: formFields.clientName || 'Name Not Provided',
@@ -54,7 +62,7 @@ module.exports = async function handler(req, res) {
       assessmentDate: formFields.analysisDate || today.toISOString().split('T')[0],
       doctorName: formFields.aestheticianName || 'Aesthetician Not Provided',
       
-      // Assessment Data
+      // Assessment Data - with detailed logging
       facialSymmetry: {
         rating: getRatingText(formFields.facialSymmetry) || 'Good',
         score: parseFloat(formFields.facialSymmetry) || 8.0,
@@ -79,21 +87,24 @@ module.exports = async function handler(req, res) {
       // Summary
       summary: buildSummary(formFields),
       
-      // Report metadata - CLEAN
-      reportId: cleanReportId,
+      // Report metadata
+      reportId: reportId,
       reviewedBy: formFields.aestheticianName || 'Professional Aesthetician',
       generatedAt: today.toISOString()
     };
 
-    console.log('✅ Mapped data created');
-    console.log('🆔 Final Report ID in mappedData:', mappedData.reportId);
+    console.log('✅ Mapped data created:');
+    console.log('   Patient Name:', mappedData.patientName);
+    console.log('   Age:', mappedData.age);
+    console.log('   Assessment Date:', mappedData.assessmentDate);
+    console.log('   Doctor Name:', mappedData.doctorName);
+    console.log('   Facial Symmetry Rating:', mappedData.facialSymmetry.rating);
+    console.log('   Skin Quality Rating:', mappedData.skinQuality.rating);
+    console.log('   Recommendations count:', mappedData.recommendations.length);
 
     // Generate HTML template
     const htmlTemplate = generateRiymaReportTemplate(mappedData, []);
     
-    console.log('📄 HTML template generated');
-    console.log('🔍 Template contains Report ID:', htmlTemplate.includes(cleanReportId) ? 'YES' : 'NO');
-
     // Build response
     const responseData = {
       success: true,
@@ -109,10 +120,10 @@ module.exports = async function handler(req, res) {
         generatedAt: today.toISOString()
       },
       htmlPreview: htmlTemplate,
-      reportId: cleanReportId
+      reportId: reportId
     };
 
-    console.log('📤 Sending response with Report ID:', responseData.reportId);
+    console.log('📤 Sending response...');
     return res.status(200).json(responseData);
 
   } catch (error) {
@@ -127,15 +138,18 @@ module.exports = async function handler(req, res) {
 
 // Helper functions
 function getRatingText(score) {
+  console.log('🔢 Converting rating score:', score, 'type:', typeof score);
   const num = parseFloat(score);
+  if (isNaN(num)) return 'Good';
   if (num >= 4.5) return 'Excellent';
   if (num >= 3.5) return 'Very Good';
-  if (num >= 2.5) return 'Good';
+  if (num >= 2.5) return 'Good';  
   if (num >= 1.5) return 'Fair';
   return 'Needs Improvement';
 }
 
 function getQualityScore(quality) {
+  console.log('🎯 Converting quality:', quality);
   const qualityMap = {
     'excellent': 9.5,
     'good': 8.0,
@@ -152,9 +166,11 @@ function capitalizeFirst(str) {
 }
 
 function buildRecommendations(formFields) {
+  console.log('💡 Building recommendations...');
   const recommendations = [];
   
   if (formFields.strengths) {
+    console.log('   ✓ Adding strengths:', formFields.strengths.substring(0, 50) + '...');
     recommendations.push({
       title: 'Key Strengths & Best Features',
       description: formFields.strengths
@@ -162,6 +178,7 @@ function buildRecommendations(formFields) {
   }
   
   if (formFields.nonSurgicalOptions) {
+    console.log('   ✓ Adding non-surgical options');
     recommendations.push({
       title: 'Non-Surgical Enhancement Options',
       description: formFields.nonSurgicalOptions
@@ -169,6 +186,7 @@ function buildRecommendations(formFields) {
   }
   
   if (formFields.surgicalOptions) {
+    console.log('   ✓ Adding surgical options');
     recommendations.push({
       title: 'Surgical Enhancement Considerations', 
       description: formFields.surgicalOptions
@@ -176,6 +194,7 @@ function buildRecommendations(formFields) {
   }
   
   if (formFields.lifestyleRecommendations) {
+    console.log('   ✓ Adding lifestyle recommendations');
     recommendations.push({
       title: 'Lifestyle & Wellness Recommendations',
       description: formFields.lifestyleRecommendations
@@ -183,27 +202,33 @@ function buildRecommendations(formFields) {
   }
 
   if (recommendations.length === 0) {
+    console.log('   ⚠️ No recommendations found, using default');
     recommendations.push({
       title: 'Professional Assessment Complete',
       description: 'Comprehensive facial analysis completed with personalized recommendations.'
     });
   }
   
+  console.log('   📊 Total recommendations:', recommendations.length);
   return recommendations;
 }
 
 function buildSummary(formFields) {
+  console.log('📋 Building summary...');
   let summary = 'Professional facial analysis completed. ';
   
   if (formFields.aestheticType) {
     summary += `Aesthetic classification: ${formFields.aestheticType}. `;
+    console.log('   ✓ Added aesthetic type:', formFields.aestheticType);
   }
   
   if (formFields.overallHarmony) {
     summary += `Overall harmony score: ${formFields.overallHarmony}/5. `;
+    console.log('   ✓ Added harmony score:', formFields.overallHarmony);
   }
   
   summary += 'Detailed recommendations provided based on individual assessment.';
   
+  console.log('   📝 Final summary length:', summary.length);
   return summary;
 }
