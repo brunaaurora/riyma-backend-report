@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// COMPLETE FINAL VERSION - FIXED CORS + Responsive HTML Template + Patient Photo + All Updates
+// COMPLETE FINAL VERSION - FIXED HTML TEMPLATE + CORS + Patient Photo + All Updates
 
 module.exports = async function handler(req, res) {
   // ===== COMPREHENSIVE CORS HEADERS =====
@@ -137,7 +137,7 @@ module.exports = async function handler(req, res) {
   }
 };
 
-// Professional Clinical Template Function - FULLY RESPONSIVE
+// Professional Clinical Template Function - FULLY RESPONSIVE + FIXED DESIGN
 function generateClinicalTemplate(data) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -487,7 +487,7 @@ function generateClinicalTemplate(data) {
             font-size: 13px;
         }
 
-        /* Analysis Photos Section - RESPONSIVE GRID */
+        /* Analysis Photos Section - RESPONSIVE GRID + PORTRAIT DIMENSIONS */
         .photos-section {
             background: #f8fafc;
             border: 1px solid rgba(164, 186, 194, 0.3);
@@ -703,7 +703,7 @@ function generateClinicalTemplate(data) {
             </div>
         </div>
 
-        <!-- Analysis Photos - FULLY RESPONSIVE -->
+        <!-- Analysis Photos - FULLY RESPONSIVE + PORTRAIT DIMENSIONS -->
         ${data.analysisImages && data.analysisImages.length > 0 ? `
         <div class="clinical-section">
             <h2 class="section-title">
