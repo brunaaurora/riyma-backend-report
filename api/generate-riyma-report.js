@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// COMPLETE FINAL VERSION - Professional Clinical Template with Bold Header Logo
+// COMPLETE FINAL VERSION - Patient Photo + Professional Clinical Template
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,6 +23,8 @@ module.exports = async function handler(req, res) {
     if (req.body && typeof req.body === 'object') {
       formFields = req.body;
       console.log('📝 Received', Object.keys(formFields).length, 'form fields');
+      console.log('📷 Patient photo included:', !!formFields.patientPhoto);
+      console.log('📷 Analysis images count:', (formFields.analysisImages || []).length);
     }
 
     // Generate unique report ID
@@ -88,6 +90,8 @@ module.exports = async function handler(req, res) {
     console.log('📋 Report ID:', reportId);
     console.log('📋 Patient:', reportData.patientName);
     console.log('📋 Doctor:', reportData.doctorName);
+    console.log('📷 Patient photo included:', !!reportData.patientPhoto);
+    console.log('📷 Analysis images:', reportData.analysisImages.length);
     
     return res.status(200).json({
       success: true,
@@ -192,7 +196,6 @@ function generateClinicalTemplate(data) {
             padding: 25px;
             border-radius: 8px;
             margin-bottom: 40px;
-            border-left: 4px solid rgba(164, 186, 194, 0.8);
         }
 
         .patient-layout {
@@ -384,17 +387,33 @@ function generateClinicalTemplate(data) {
 
         .photos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin-top: 15px;
         }
 
         .analysis-photo {
             width: 100%;
-            height: 120px;
+            height: 200px;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid rgba(164, 186, 194, 0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive grid for different numbers of photos */
+        @media (max-width: 768px) {
+            .photos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .photos-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
         }
 
         .footer {
@@ -577,10 +596,10 @@ function generateClinicalTemplate(data) {
                 Analysis Photos
             </h2>
             <div class="photos-section">
-                <div class="notes-title">Documentation Photos</div>
+                <div class="notes-title">Clinical Documentation (${data.analysisImages.length} ${data.analysisImages.length === 1 ? 'photo' : 'photos'})</div>
                 <div class="photos-grid">
                     ${data.analysisImages.map((image, index) => `
-                        <img src="${image}" alt="Analysis Photo ${index + 1}" class="analysis-photo" />
+                        <img src="${image}" alt="Clinical Analysis Photo ${index + 1}" class="analysis-photo" />
                     `).join('')}
                 </div>
             </div>
