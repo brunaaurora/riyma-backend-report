@@ -41,6 +41,8 @@ module.exports = async function handler(req, res) {
       gender: 'Not Specified',
       assessmentDate: formatDate(formFields.analysisDate) || formatDate(today.toISOString().split('T')[0]),
       doctorName: formFields.aestheticianName || 'Aesthetician Not Provided',
+      patientPhoto: formFields.patientPhoto || null,
+      analysisImages: formFields.analysisImages || [],
       
       // Assessment Scores with proper conversion
       facialSymmetry: {
@@ -149,7 +151,7 @@ function generateClinicalTemplate(data) {
         .logo {
             font-size: 32px;
             font-weight: 600;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.05em;
             color: #1e293b;
             text-transform: lowercase;
         }
@@ -191,6 +193,46 @@ function generateClinicalTemplate(data) {
             border-radius: 8px;
             margin-bottom: 40px;
             border-left: 4px solid rgba(164, 186, 194, 0.8);
+        }
+
+        .patient-layout {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .patient-photo-container {
+            flex-shrink: 0;
+            width: 120px;
+            height: 150px;
+        }
+
+        .patient-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(164, 186, 194, 0.3);
+            background: #f8fafc;
+        }
+
+        .patient-photo-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px dashed rgba(164, 186, 194, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .patient-info {
+            flex: 1;
         }
 
         .section-title {
@@ -331,6 +373,30 @@ function generateClinicalTemplate(data) {
             font-size: 13px;
         }
 
+        /* Analysis Photos Section */
+        .photos-section {
+            background: #f8fafc;
+            border: 1px solid rgba(164, 186, 194, 0.3);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .analysis-photo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(164, 186, 194, 0.3);
+        }
+
         .footer {
             margin-top: 50px;
             padding-top: 20px;
@@ -374,26 +440,36 @@ function generateClinicalTemplate(data) {
                 <span class="section-number">01</span>
                 Patient Information
             </h2>
-            <div class="patient-grid">
-                <div class="field-group">
-                    <div class="field-label">Full Name</div>
-                    <div class="field-value">${data.patientName}</div>
+            <div class="patient-layout">
+                <div class="patient-photo-container">
+                    ${data.patientPhoto ? 
+                        `<img src="${data.patientPhoto}" alt="Patient Photo" class="patient-photo" />` :
+                        `<div class="patient-photo-placeholder">Patient Photo</div>`
+                    }
                 </div>
-                <div class="field-group">
-                    <div class="field-label">Age</div>
-                    <div class="field-value">${data.age}</div>
-                </div>
-                <div class="field-group">
-                    <div class="field-label">Assessment Date</div>
-                    <div class="field-value">${data.assessmentDate}</div>
-                </div>
-                <div class="field-group">
-                    <div class="field-label">Gender</div>
-                    <div class="field-value">${data.gender}</div>
-                </div>
-                <div class="field-group">
-                    <div class="field-label">Referring Physician</div>
-                    <div class="field-value">${data.doctorName}</div>
+                <div class="patient-info">
+                    <div class="patient-grid">
+                        <div class="field-group">
+                            <div class="field-label">Full Name</div>
+                            <div class="field-value">${data.patientName}</div>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Age</div>
+                            <div class="field-value">${data.age}</div>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Assessment Date</div>
+                            <div class="field-value">${data.assessmentDate}</div>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Gender</div>
+                            <div class="field-value">${data.gender}</div>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Referring Physician</div>
+                            <div class="field-value">${data.doctorName}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -492,6 +568,24 @@ function generateClinicalTemplate(data) {
                 <div class="notes-text">${data.clinicalSummary}</div>
             </div>
         </div>
+
+        <!-- Analysis Photos -->
+        ${data.analysisImages && data.analysisImages.length > 0 ? `
+        <div class="clinical-section">
+            <h2 class="section-title">
+                <span class="section-number">📸</span>
+                Analysis Photos
+            </h2>
+            <div class="photos-section">
+                <div class="notes-title">Documentation Photos</div>
+                <div class="photos-grid">
+                    ${data.analysisImages.map((image, index) => `
+                        <img src="${image}" alt="Analysis Photo ${index + 1}" class="analysis-photo" />
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+        ` : ''}
 
         <!-- Footer -->
         <div class="footer">
