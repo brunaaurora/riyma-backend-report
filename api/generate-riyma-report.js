@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// COMPLETE FINAL VERSION - FIXED HTML TEMPLATE + CORS + Patient Photo + All Updates
+// COMPLETE FINAL VERSION - ENHANCED CSS + FIXED DESIGN + CORS + Patient Photo
 
 module.exports = async function handler(req, res) {
   // ===== COMPREHENSIVE CORS HEADERS =====
@@ -7,9 +7,8 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'false');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  res.setHeader('Access-Control-Max-Age', '86400');
 
-  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     console.log('✅ CORS preflight request handled');
     return res.status(200).end();
@@ -22,10 +21,7 @@ module.exports = async function handler(req, res) {
   try {
     console.log('🚀 === RIYMA CLINICAL REPORT GENERATION ===');
     console.log('📡 Request origin:', req.headers.origin);
-    console.log('📡 Request method:', req.method);
-    console.log('📡 Content-Type:', req.headers['content-type']);
     
-    // Parse JSON data from React form
     let formFields = {};
     
     if (req.body && typeof req.body === 'object') {
@@ -33,14 +29,6 @@ module.exports = async function handler(req, res) {
       console.log('📝 Received', Object.keys(formFields).length, 'form fields');
       console.log('📷 Patient photo included:', !!formFields.patientPhoto);
       console.log('📷 Analysis images count:', (formFields.analysisImages || []).length);
-      
-      // Debug: Log key fields received
-      console.log('🔍 Key fields received:');
-      console.log('   clientName:', formFields.clientName);
-      console.log('   aestheticianName:', formFields.aestheticianName);
-      console.log('   analysisDate:', formFields.analysisDate);
-    } else {
-      console.log('⚠️ No body data received');
     }
 
     // Generate unique report ID
@@ -53,7 +41,6 @@ module.exports = async function handler(req, res) {
 
     // Map form data to template format
     const reportData = {
-      // Patient Information
       patientName: formFields.clientName || 'Name Not Provided',
       age: formFields.clientAge ? `${formFields.clientAge} years` : 'Age Not Provided',
       gender: 'Not Specified',
@@ -62,7 +49,6 @@ module.exports = async function handler(req, res) {
       patientPhoto: formFields.patientPhoto || null,
       analysisImages: formFields.analysisImages || [],
       
-      // Assessment Scores with proper conversion
       facialSymmetry: {
         rating: getRatingText(formFields.facialSymmetry),
         score: convertToTenPoint(formFields.facialSymmetry),
@@ -81,33 +67,22 @@ module.exports = async function handler(req, res) {
         notes: formFields.featureAnalysis || 'Facial proportions assessed.'
       },
 
-      // Individual Features
       eyesRating: formFields.eyesRating || 0,
       noseRating: formFields.noseRating || 0,
       lipsRating: formFields.lipsRating || 0,
       jawlineRating: formFields.jawlineRating || 0,
       
-      // Enhancement Recommendations
       recommendations: buildRecommendations(formFields),
-      
-      // Clinical Summary
       clinicalSummary: buildClinicalSummary(formFields),
       
-      // Report metadata
       reportId: reportId,
       generatedDate: formatDate(today.toISOString().split('T')[0]),
       reviewedBy: formFields.aestheticianName || 'Professional Aesthetician'
     };
 
-    // Generate professional clinical template
     const htmlTemplate = generateClinicalTemplate(reportData);
     
-    console.log('✅ Professional clinical report generated');
-    console.log('📋 Report ID:', reportId);
-    console.log('📋 Patient:', reportData.patientName);
-    console.log('📋 Doctor:', reportData.doctorName);
-    console.log('📷 Patient photo included:', !!reportData.patientPhoto);
-    console.log('📷 Analysis images:', reportData.analysisImages.length);
+    console.log('✅ Enhanced clinical report generated with updated styling');
     
     return res.status(200).json({
       success: true,
@@ -137,7 +112,7 @@ module.exports = async function handler(req, res) {
   }
 };
 
-// Professional Clinical Template Function - FULLY RESPONSIVE + FIXED DESIGN
+// ENHANCED LUXURY CLINICAL TEMPLATE - 2024 STANDARDS
 function generateClinicalTemplate(data) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -153,37 +128,55 @@ function generateClinicalTemplate(data) {
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #1e293b;
-            background: white;
+            color: #1a202c;
+            background: #ffffff;
             font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .page {
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 20mm;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 25mm;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative;
         }
 
-        /* RESPONSIVE DESIGN - Mobile First */
+        /* LUXURY DESIGN ENHANCEMENTS */
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #64748b 0%, #94a3b8 50%, #64748b 100%);
+        }
+
+        /* RESPONSIVE DESIGN */
         @media screen and (max-width: 768px) {
             .page {
                 width: 100%;
                 margin: 0;
-                padding: 15px;
+                padding: 20px;
                 box-shadow: none;
                 min-height: auto;
+            }
+            
+            .page::before {
+                display: none;
             }
             
             .header {
                 flex-direction: column;
                 text-align: center;
-                gap: 15px;
-                margin-bottom: 30px;
+                gap: 20px;
+                margin-bottom: 35px;
             }
             
             .report-info {
@@ -194,11 +187,7 @@ function generateClinicalTemplate(data) {
                 flex-direction: column;
                 align-items: center;
                 text-align: center;
-                gap: 15px;
-            }
-            
-            .patient-photo-container {
-                margin-bottom: 15px;
+                gap: 20px;
             }
             
             .patient-grid {
@@ -212,86 +201,76 @@ function generateClinicalTemplate(data) {
             }
             
             .photos-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
+                grid-template-columns: 1fr !important;
                 gap: 15px;
             }
         }
 
         @media screen and (max-width: 480px) {
             .page {
-                padding: 10px;
+                padding: 15px;
             }
             
             .logo {
-                font-size: 24px !important;
+                font-size: 28px !important;
             }
             
             .main-title {
-                font-size: 20px !important;
-            }
-            
-            .section-title {
-                font-size: 16px !important;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                gap: 8px;
-            }
-            
-            .patient-photo-container {
-                width: 80px;
-                height: 100px;
-            }
-            
-            .photos-grid {
-                grid-template-columns: 1fr !important;
-                gap: 10px;
+                font-size: 22px !important;
             }
             
             .analysis-photo {
-                height: 220px !important;
+                height: 250px !important;
             }
         }
 
+        /* HEADER STYLING */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(164, 186, 194, 0.3);
+            margin-bottom: 45px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
         }
 
         .logo {
-            font-size: 32px;
-            font-weight: 600;
+            font-size: 36px;
+            font-weight: 700;
             letter-spacing: normal;
-            color: #1e293b;
+            color: #1a202c;
             text-transform: lowercase;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
         .report-info {
             text-align: right;
             color: #64748b;
             font-size: 12px;
+            line-height: 1.5;
         }
 
         .report-id {
             font-weight: 600;
-            color: #1e293b;
+            color: #1a202c;
             margin-bottom: 4px;
+            font-size: 13px;
         }
 
+        /* TITLE SECTION */
         .title-section {
             text-align: center;
             margin-bottom: 50px;
+            padding: 20px 0;
         }
 
         .main-title {
-            font-size: 28px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 8px;
+            font-size: 32px;
+            font-weight: 300;
+            color: #1a202c;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
 
         .subtitle {
@@ -301,236 +280,272 @@ function generateClinicalTemplate(data) {
             font-weight: 300;
         }
 
+        /* PATIENT SECTION - FIXED DESIGN */
         .patient-section {
-            background: rgba(164, 186, 194, 0.1);
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 45px;
             border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .patient-layout {
             display: flex;
-            gap: 25px;
+            gap: 30px;
             align-items: flex-start;
         }
 
         .patient-photo-container {
             flex-shrink: 0;
-            width: 120px;
-            height: 150px;
+            width: 130px;
+            height: 160px;
         }
 
         .patient-photo {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid rgba(164, 186, 194, 0.3);
-            background: #f8fafc;
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .patient-photo-placeholder {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 2px dashed rgba(164, 186, 194, 0.4);
-            border-radius: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #94a3b8;
             font-size: 12px;
             text-align: center;
-            padding: 10px;
+            padding: 15px;
         }
 
         .patient-info {
             flex: 1;
         }
 
+        /* SECTION TITLES */
         .section-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 20px;
+            color: #1a202c;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .section-number {
-            background: rgba(164, 186, 194, 0.3);
-            color: #1e293b;
-            width: 30px;
-            height: 30px;
+            background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+            color: #ffffff;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            margin-right: 12px;
+            margin-right: 15px;
             font-size: 14px;
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
         }
 
         .patient-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 25px;
         }
 
         .field-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .field-label {
             font-weight: 600;
             color: #374151;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
         }
 
         .field-value {
-            color: #1e293b;
-            font-size: 14px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(164, 186, 194, 0.3);
+            color: #1a202c;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
         }
 
+        /* CLINICAL SECTIONS */
         .clinical-section {
-            margin-bottom: 40px;
+            margin-bottom: 45px;
         }
 
         .assessment-grid {
             display: grid;
             grid-template-columns: 2fr 1fr 3fr;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .assessment-item {
-            background: white;
-            border: 1px solid rgba(164, 186, 194, 0.3);
-            border-radius: 6px;
-            padding: 15px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .assessment-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .assessment-label {
             font-weight: 600;
             color: #374151;
             font-size: 13px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .assessment-value {
-            color: #1e293b;
-            font-size: 14px;
+            color: #1a202c;
+            font-size: 15px;
+            font-weight: 500;
         }
 
         .rating-visual {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 5px;
+            gap: 6px;
+            margin-top: 8px;
         }
 
         .rating-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #e2e8f0;
+            transition: all 0.2s ease;
         }
 
         .rating-dot.active {
-            background: rgba(164, 186, 194, 0.8);
+            background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+            box-shadow: 0 2px 4px rgba(100, 116, 139, 0.3);
         }
 
+        /* ENHANCEMENT BOXES */
         .enhancement-box {
-            background: linear-gradient(135deg, rgba(164, 186, 194, 0.1) 0%, rgba(164, 186, 194, 0.05) 100%);
-            border: 1px solid rgba(164, 186, 194, 0.3);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .enhancement-title {
             font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 8px;
-            font-size: 14px;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 15px;
         }
 
         .enhancement-text {
             color: #475569;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.7;
         }
 
+        /* NOTES SECTION */
         .notes-section {
-            background: #f8fafc;
-            border: 1px solid rgba(164, 186, 194, 0.3);
-            border-radius: 8px;
-            padding: 25px;
-            margin-top: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .notes-title {
             font-weight: 600;
-            color: #1e293b;
+            color: #1a202c;
             margin-bottom: 15px;
+            font-size: 16px;
         }
 
         .notes-text {
             color: #475569;
-            line-height: 1.7;
-            font-size: 13px;
+            line-height: 1.8;
+            font-size: 14px;
         }
 
-        /* Analysis Photos Section - RESPONSIVE GRID + PORTRAIT DIMENSIONS */
+        /* PHOTOS SECTION - ENHANCED PORTRAIT GRID */
         .photos-section {
-            background: #f8fafc;
-            border: 1px solid rgba(164, 186, 194, 0.3);
-            border-radius: 8px;
-            padding: 25px;
-            margin-top: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 35px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .photos-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 15px;
+            gap: 25px;
+            margin-top: 20px;
         }
 
         .analysis-photo {
             width: 100%;
-            height: 280px;
+            height: 320px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid rgba(164, 186, 194, 0.3);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
         }
 
+        .analysis-photo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        /* FOOTER */
         .footer {
             margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(164, 186, 194, 0.3);
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
             text-align: center;
             color: #64748b;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         .confidential {
-            background: rgba(164, 186, 194, 0.1);
-            padding: 8px 16px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 10px 20px;
+            border-radius: 6px;
             display: inline-block;
-            margin-bottom: 10px;
-            font-weight: 500;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 11px;
         }
 
-        /* Print Optimization */
+        /* PRINT OPTIMIZATION */
         @media print {
             .page {
                 width: 100%;
@@ -539,13 +554,35 @@ function generateClinicalTemplate(data) {
                 box-shadow: none;
             }
             
+            .page::before {
+                display: none;
+            }
+            
             .photos-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                gap: 15px;
             }
             
             .analysis-photo {
-                height: 200px;
+                height: 220px;
+            }
+            
+            .assessment-item:hover,
+            .analysis-photo:hover {
+                transform: none;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            }
+        }
+
+        /* TABLET RESPONSIVE */
+        @media screen and (max-width: 1024px) and (min-width: 769px) {
+            .photos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .analysis-photo {
+                height: 280px;
             }
         }
     </style>
@@ -626,7 +663,7 @@ function generateClinicalTemplate(data) {
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Score</div>
-                    <div class="assessment-value" style="font-size: 18px; font-weight: 600;">${data.facialSymmetry.score}/10</div>
+                    <div class="assessment-value" style="font-size: 20px; font-weight: 700;">${data.facialSymmetry.score}/10</div>
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Clinical Notes</div>
@@ -645,7 +682,7 @@ function generateClinicalTemplate(data) {
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Score</div>
-                    <div class="assessment-value" style="font-size: 18px; font-weight: 600;">${data.skinQuality.score}/10</div>
+                    <div class="assessment-value" style="font-size: 20px; font-weight: 700;">${data.skinQuality.score}/10</div>
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Clinical Notes</div>
@@ -664,7 +701,7 @@ function generateClinicalTemplate(data) {
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Score</div>
-                    <div class="assessment-value" style="font-size: 18px; font-weight: 600;">${data.facialProportions.score}/10</div>
+                    <div class="assessment-value" style="font-size: 20px; font-weight: 700;">${data.facialProportions.score}/10</div>
                 </div>
                 <div class="assessment-item">
                     <div class="assessment-label">Clinical Notes</div>
@@ -703,7 +740,7 @@ function generateClinicalTemplate(data) {
             </div>
         </div>
 
-        <!-- Analysis Photos - FULLY RESPONSIVE + PORTRAIT DIMENSIONS -->
+        <!-- Analysis Photos - ENHANCED PORTRAIT GRID -->
         ${data.analysisImages && data.analysisImages.length > 0 ? `
         <div class="clinical-section">
             <h2 class="section-title">
@@ -723,9 +760,9 @@ function generateClinicalTemplate(data) {
 
         <!-- Footer -->
         <div class="footer">
-            <div class="confidential">CONFIDENTIAL MEDICAL REPORT</div>
+            <div class="confidential">Confidential Medical Report</div>
             <div>This report contains confidential patient information and is intended solely for the use of the patient and authorized healthcare providers.</div>
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 15px;">
                 <strong>riyma</strong> · Professional Aesthetic Assessment · www.riyma.com
             </div>
         </div>
@@ -749,7 +786,6 @@ function getRatingText(score) {
 
 function convertToTenPoint(score) {
   const num = parseInt(score);
-  // Convert 1-5 scale to 1-10 scale
   return Math.round(num * 2).toFixed(1);
 }
 
@@ -781,7 +817,7 @@ function formatDate(dateStr) {
 }
 
 function generateRatingDots(score) {
-  const numDots = Math.round(parseFloat(score) / 2); // Convert 10-point to 5-dot scale
+  const numDots = Math.round(parseFloat(score) / 2);
   let dots = '';
   for (let i = 1; i <= 5; i++) {
     const activeClass = i <= numDots ? 'active' : '';
