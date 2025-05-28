@@ -1,12 +1,17 @@
 // api/generate-riyma-report.js
-// COMPLETE FINAL VERSION - Responsive HTML Template + Patient Photo + All Updates
+// COMPLETE FINAL VERSION - FIXED CORS + Responsive HTML Template + Patient Photo + All Updates
 
 module.exports = async function handler(req, res) {
+  // ===== COMPREHENSIVE CORS HEADERS =====
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'false');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
 
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log('✅ CORS preflight request handled');
     return res.status(200).end();
   }
 
@@ -16,6 +21,9 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log('🚀 === RIYMA CLINICAL REPORT GENERATION ===');
+    console.log('📡 Request origin:', req.headers.origin);
+    console.log('📡 Request method:', req.method);
+    console.log('📡 Content-Type:', req.headers['content-type']);
     
     // Parse JSON data from React form
     let formFields = {};
@@ -25,6 +33,14 @@ module.exports = async function handler(req, res) {
       console.log('📝 Received', Object.keys(formFields).length, 'form fields');
       console.log('📷 Patient photo included:', !!formFields.patientPhoto);
       console.log('📷 Analysis images count:', (formFields.analysisImages || []).length);
+      
+      // Debug: Log key fields received
+      console.log('🔍 Key fields received:');
+      console.log('   clientName:', formFields.clientName);
+      console.log('   aestheticianName:', formFields.aestheticianName);
+      console.log('   analysisDate:', formFields.analysisDate);
+    } else {
+      console.log('⚠️ No body data received');
     }
 
     // Generate unique report ID
@@ -98,7 +114,17 @@ module.exports = async function handler(req, res) {
       reportData: reportData,
       htmlPreview: htmlTemplate,
       reportId: reportId,
-      generatedAt: today.toISOString()
+      generatedAt: today.toISOString(),
+      debug: {
+        receivedFields: Object.keys(formFields),
+        totalFields: Object.keys(formFields).length,
+        keyFieldsReceived: {
+          clientName: !!formFields.clientName,
+          aestheticianName: !!formFields.aestheticianName,
+          analysisDate: !!formFields.analysisDate,
+          patientPhoto: !!formFields.patientPhoto
+        }
+      }
     });
 
   } catch (error) {
