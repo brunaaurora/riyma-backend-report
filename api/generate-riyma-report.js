@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// FINAL VERSION - Professional Clinical Template
+// COMPLETE FINAL VERSION - Professional Clinical Template with Bold Header Logo
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -148,7 +148,7 @@ function generateClinicalTemplate(data) {
 
         .logo {
             font-size: 32px;
-            font-weight: 300;
+            font-weight: 600;
             letter-spacing: 0.2em;
             color: #1e293b;
             text-transform: lowercase;
