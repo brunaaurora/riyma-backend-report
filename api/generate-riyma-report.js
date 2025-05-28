@@ -249,7 +249,7 @@ function generateClinicalTemplate(data) {
             }
             
             .analysis-photo {
-                height: 150px !important;
+                height: 220px !important;
             }
         }
 
@@ -265,7 +265,7 @@ function generateClinicalTemplate(data) {
         .logo {
             font-size: 32px;
             font-weight: 600;
-            letter-spacing: 0.05em;
+            letter-spacing: normal;
             color: #1e293b;
             text-transform: lowercase;
         }
@@ -306,6 +306,7 @@ function generateClinicalTemplate(data) {
             padding: 25px;
             border-radius: 8px;
             margin-bottom: 40px;
+            border: none;
         }
 
         .patient-layout {
@@ -504,7 +505,7 @@ function generateClinicalTemplate(data) {
 
         .analysis-photo {
             width: 100%;
-            height: 200px;
+            height: 280px;
             object-fit: cover;
             border-radius: 8px;
             border: 1px solid rgba(164, 186, 194, 0.3);
@@ -544,7 +545,7 @@ function generateClinicalTemplate(data) {
             }
             
             .analysis-photo {
-                height: 150px;
+                height: 200px;
             }
         }
     </style>
