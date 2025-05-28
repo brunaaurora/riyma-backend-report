@@ -1,5 +1,5 @@
 // api/generate-riyma-report.js
-// COMPLETE FINAL VERSION - Patient Photo + Professional Clinical Template
+// COMPLETE FINAL VERSION - Responsive HTML Template + Patient Photo + All Updates
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -111,7 +111,7 @@ module.exports = async function handler(req, res) {
   }
 };
 
-// Professional Clinical Template Function
+// Professional Clinical Template Function - FULLY RESPONSIVE
 function generateClinicalTemplate(data) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -141,6 +141,90 @@ function generateClinicalTemplate(data) {
             padding: 20mm;
             background: white;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* RESPONSIVE DESIGN - Mobile First */
+        @media screen and (max-width: 768px) {
+            .page {
+                width: 100%;
+                margin: 0;
+                padding: 15px;
+                box-shadow: none;
+                min-height: auto;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .report-info {
+                text-align: center;
+            }
+            
+            .patient-layout {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .patient-photo-container {
+                margin-bottom: 15px;
+            }
+            
+            .patient-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .assessment-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .photos-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 15px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .page {
+                padding: 10px;
+            }
+            
+            .logo {
+                font-size: 24px !important;
+            }
+            
+            .main-title {
+                font-size: 20px !important;
+            }
+            
+            .section-title {
+                font-size: 16px !important;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            .patient-photo-container {
+                width: 80px;
+                height: 100px;
+            }
+            
+            .photos-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+            }
+            
+            .analysis-photo {
+                height: 150px !important;
+            }
         }
 
         .header {
@@ -376,7 +460,7 @@ function generateClinicalTemplate(data) {
             font-size: 13px;
         }
 
-        /* Analysis Photos Section */
+        /* Analysis Photos Section - RESPONSIVE GRID */
         .photos-section {
             background: #f8fafc;
             border: 1px solid rgba(164, 186, 194, 0.3);
@@ -401,21 +485,6 @@ function generateClinicalTemplate(data) {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Responsive grid for different numbers of photos */
-        @media (max-width: 768px) {
-            .photos-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .photos-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-        }
-
         .footer {
             margin-top: 50px;
             padding-top: 20px;
@@ -432,6 +501,25 @@ function generateClinicalTemplate(data) {
             display: inline-block;
             margin-bottom: 10px;
             font-weight: 500;
+        }
+
+        /* Print Optimization */
+        @media print {
+            .page {
+                width: 100%;
+                margin: 0;
+                padding: 15mm;
+                box-shadow: none;
+            }
+            
+            .photos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .analysis-photo {
+                height: 150px;
+            }
         }
     </style>
 </head>
@@ -588,11 +676,11 @@ function generateClinicalTemplate(data) {
             </div>
         </div>
 
-        <!-- Analysis Photos -->
+        <!-- Analysis Photos - FULLY RESPONSIVE -->
         ${data.analysisImages && data.analysisImages.length > 0 ? `
         <div class="clinical-section">
             <h2 class="section-title">
-                <span class="section-number">📸</span>
+                <span class="section-number">◎</span>
                 Analysis Photos
             </h2>
             <div class="photos-section">
